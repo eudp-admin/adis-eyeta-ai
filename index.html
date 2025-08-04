@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="am">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>አዲስ እይታ - የፖለቲካ AI</title>
+    
+    <!-- CSS, JavaScript, and PDF Library all in one file -->
+    <style>
+        /* 
+         * ዋናው የፎንት ለውጥ እዚህ ጋር ተደርጓል።
+         * ከGoogle Fonts ላይ Nyalaን የምንጠራበትን መስመር አስወግደናል።
+        */
+        body {
+            /* 
+             * እያንዳንዱን ጽሑፍ በ Abyssinica SIL እንዲሆን አድርገናል
+             * 'Nyala' እና 'sans-serif' እንደ ተጠባባቂ (fallback) ሆነው ያገለግላሉ።
+            */
+            font-family: 'Abyssinica SIL', 'Nyala', sans-serif;
+            background-color: #f0f2f5;
+            margin: 0;
+            padding: 15px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 98vh;
+            font-size: 1.1em;
+        }
+        .container {
+            width: 100%;
+            max-width: 850px;
+            background: #ffffff;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            height: 90vh;
+        }
+        header {
+            background: #1a237e; /* Deep Indigo color */
+            color: white;
+            padding: 20px;
+            text-align: center;
+            border-top-left-radius: 15px;
+            border-top-right-radius: 15px;
+        }
+        header h1 { margin: 0; font-size: 2.2em; }
+        header p { margin: 5px 0 0; opacity: 0.9; }
+        .controls {
+            padding: 10px 20px;
+            text-align: right;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        .btn {
+            padding: 8px 15px;
+            background: #6c757d;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            /* የቁልፉንም ፎንት አስተካክለናል */
+            font-family: 'Abyssinica SIL', 'Nyala', sans-serif;
+            font-size: 0.9em;
+        }
+        .chat-box {
+            flex-grow: 1;
+            padding: 25px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .message {
+            padding: 15px 20px;
+            border-radius: 22px;
+            max-width: 85%;
+            line-height: 1.7;
+            word-wrap: break-word;
+            position: relative;
+        }
+        .ai-message { background-color: #e9e9eb; color: #212121; align-self: flex-start; }
+        .user-message { background-color: #1a237e; color: white; align-self: flex-end; margin-left: auto; }
+        .pdf-btn {
+            display: none;
+            background: #1e88e5;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 5px 8px;
+            cursor: pointer;
+            position: absolute;
+            bottom: 8px;
+            right: 8px;
+            font-size: 12px;
+            opacity: 0.7;
+            transition: opacity 0.3s;
+        }
+        .ai-message:hover .pdf-btn { display: block; opacity: 1; }
+        form { display: flex; padding: 20px; background-color: #ffffff; border-top: 1px solid #e0e0e0; }
+        input[type="text"] {
+            flex-grow: 1;
+            border: 2px solid #ccc;
+            padding: 15px;
+            border-radius: 30px;
+            margin-right: 15px;
+            font-size: 1em;
+            /* የጽሑፍ መጻፊያ ሳጥኑንም ፎንት አስተካክለናል */
+            font-family: 'Abyssinica SIL', 'Nyala', sans-serif;
+        }
+        input[type="text"]:focus { outline: none; border-color: #1a237e; }
+        form button {
+            background-color: #1a237e;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-size: 1em;
+            /* የመላኪያ ቁልፉንም ፎንት አስተካክለናል */
+            font-family: 'Abyssinica SIL', 'Nyala', sans-serif;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>አዲስ እይታ 🇪🇹</h1>
+            <p>ስለ ኢትዮጵያ ፖለቲካ እና ታሪክ በጥልቀት ይወቁ</p>
+        </header>
+        <div class="controls">
+            <button id="save-chat-btn" class="btn">ውይይቱን በሙሉ አስቀምጥ</button>
+        </div>
+        <div class="chat-box" id="chat-box">
+            <div class="message ai-message">
+                <p>ሰላም! 'አዲስ እይታ' ነኝ። ጥያቄዎን ከታች ባለው ሳጥን ውስጥ ያስገቡ።</p>
+            </div>
+        </div>
+        <form id="chat-form">
+            <input type="text" id="user-input" placeholder="ጥያቄዎን እዚህ ያስገቡ..." autocomplete="off" autofocus>
+            <button type="submit">ላክ</button>
+        </form>
+    </div>
+
+    <!-- JavaScript Libraries and Custom Script -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    
+    <script>
+        // All our JavaScript logic goes here
+        $(document).ready(function() {
+            // Function to add a message to the chatbox
+            function addMessage(sender, message) {
+                let formattedMessage = message.replace(/\n/g, '<br>');
+                let messageHtml = '';
+                if (sender === 'user') {
+                    messageHtml = `<div class="message user-message"><p>${formattedMessage}</p></div>`;
+                } else {
+                    messageHtml = `
+                        <div class="message ai-message">
+                            <p>${formattedMessage}</p>
+                            <button class="pdf-btn" title="ወደ PDF ቀይር">PDF</button>
+                        </div>`;
+                }
+                $('#chat-box').append(messageHtml);
+                // Scroll to the bottom of the chat box
+                $("#chat-box").scrollTop($("#chat-box")[0].scrollHeight);
+            }
+
+            // Handle form submission
+            $('#chat-form').on('submit', function(e) {
+                e.preventDefault();
+                let userInput = $('#user-input').val();
+                if (userInput.trim() === '') return;
+
+                addMessage('user', userInput);
+                $('#user-input').val('');
+                
+                // Show a loading message
+                $('#chat-box').append('<div class="message ai-message" id="loading"><p>መልስ በመዘጋጀት ላይ ነው...</p></div>');
+                $("#chat-box").scrollTop($("#chat-box")[0].scrollHeight);
+
+                // Send request to the Python backend
+                $.ajax({
+                    url: '/ask',
+                    method: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({ 'question': userInput }),
+                    success: function(response) {
+                        $('#loading').remove();
+                        addMessage('ai', response.answer);
+                    },
+                    error: function() {
+                        $('#loading').remove();
+                        addMessage('ai', 'ይቅርታ፣ ስህተት አጋጥሟል። እባክዎ እንደገና ይሞክሩ።');
+                    }
+                });
+            });
+
+            // Handle PDF download click
+            $(document).on('click', '.pdf-btn', function() {
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF();
+                const textToSave = $(this).siblings('p').text();
+
+                // jsPDF አማርኛን በቀላሉ ስለማይደግፍ፣ ወደ መሰረታዊ ፎንት እንቀይራለን
+                doc.setFont("Helvetica"); 
+                const splitText = doc.splitTextToSize(textToSave, 180);
+                doc.text(splitText, 15, 20);
+                doc.save("ai_answer.pdf");
+            });
+
+            // Handle save chat history click
+            $('#save-chat-btn').on('click', function() {
+                let chatText = "የውይይት ታሪክ:\n\n";
+                $('#chat-box .message').each(function() {
+                    const sender = $(this).hasClass('user-message') ? 'እርስዎ:' : 'አዲስ እይታ:';
+                    const text = $(this).find('p').text();
+                    chatText += sender + "\n" + text + "\n\n";
+                });
+                
+                let blob = new Blob([chatText], { type: 'text/plain;charset=utf-8' });
+                let url = window.URL.createObjectURL(blob);
+                let a = document.createElement('a');
+                a.href = url;
+                a.download = "chat_history.txt";
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+            });
+        });
+    </script>
+</body>
+</html>
